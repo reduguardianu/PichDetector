@@ -39,6 +39,9 @@ public class MicInput : MonoBehaviour
     {
         //   MIDI ー ー  
         var noteNumber = CalculateNoteNumberFromFrequency(freq);
+        if (noteNumber < 0) {
+            return "none";
+        }
         // 0:C - 11:B    
         var note = noteNumber % 12;
         // 0:C～11:B       
