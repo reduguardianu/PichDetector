@@ -1,11 +1,13 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-
+using UnityEngine.UI;
 public class MicInput : MonoBehaviour
 {
+    public float threshold = 0.02f;
+    public int qSamples = 1024;
     [SerializeField]
-    public string noteNumber = "none";
+    public Text noteNumber;
     private string[] noteNames = { "C", "C ♯", "D", "D ♯", "E", "F", "F ♯", "G", "G ♯", "A", "A ♯", "B" };
     void Start()
     {
@@ -17,29 +19,36 @@ public class MicInput : MonoBehaviour
 
     void Update()
     {
-        float[] spectrum = new float[256];
-        AudioListener.GetSpectrumData(spectrum, 0, FFTWindow.Rectangular);
+        float[] spectrum = new float[qSamples];
+        AudioListener.GetSpectrumData(spectrum, 0, FFTWindow.BlackmanHarris);
 
-        var maxIndex = 0;
-        var maxValue = 0.0f;
-        for (int i = 0; i < spectrum.Length; i++)
-        {
-            var val = spectrum[i];
-            if (val > maxValue)
+        float maxV = 0;
+        int maxN = 0;
+        for (int i = 0; i < qSamples; i++)
+        { // find max 
+            if (spectrum[i] > maxV && spectrum[i] > threshold)
             {
-                maxValue = val;
-                maxIndex = i;
+                maxV = spectrum[i];
+                maxN = i; // maxN is the index of max
             }
         }
-        var freq = maxIndex * AudioSettings.outputSampleRate / 2 / spectrum.Length;
-        noteNumber = GetNoteName(freq);
+        float freqN = maxN; // pass the index to a float variable
+        if (maxN > 0 && maxN < qSamples - 1)
+        { // interpolate index using neighbours
+            var dL = spectrum[maxN - 1] / spectrum[maxN];
+            var dR = spectrum[maxN + 1] / spectrum[maxN];
+            freqN += (float)0.5 * (dR * dR - dL * dL);
+        }
+        var pitchValue = freqN * (AudioSettings.outputSampleRate / 2) / qSamples; // convert index to frequency
+        noteNumber.text = GetNoteName(pitchValue);
     }
 
     public string GetNoteName(float freq)
     {
         //   MIDI ー ー  
         var noteNumber = CalculateNoteNumberFromFrequency(freq);
-        if (noteNumber < 0) {
+        if (noteNumber < 0)
+        {
             return "none";
         }
         // 0:C - 11:B    
