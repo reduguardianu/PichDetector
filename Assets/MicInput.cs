@@ -21,6 +21,7 @@ public class MicInput : MonoBehaviour
         GetComponent<MicAnalyzer>().segmentEnded += OnSegmentEnded;
         timeoutStartTime = Time.realtimeSinceStartup;
         nextRoundStart = Time.realtimeSinceStartup + timeout;
+        Application.RequestUserAuthorization(UserAuthorization.Microphone);
     }
 
     void Update()
