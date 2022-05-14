@@ -2,22 +2,76 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
+using UnityEngine.Audio;
 public class MicInput : MonoBehaviour
 {
-    public float threshold = 0.02f;
-    public int qSamples = 1024;
+    public int noOfSegments;
+    float threshold = -20.00f;
+    int qSamples = 1024;
     [SerializeField]
-    public Text noteNumber;
+    public AudioMixer masterMixer;
+    public Text counter;
+    public Text noteName;
+    public Slider progressBar;
     private string[] noteNames = { "C", "C ♯", "D", "D ♯", "E", "F", "F ♯", "G", "G ♯", "A", "A ♯", "B" };
+    int timeout = 3;
+    float nextChange;
+    int segmentsLeft;
+    private string state;
     void Start()
     {
         Application.RequestUserAuthorization(UserAuthorization.Microphone);
         AudioSource aud = GetComponent<AudioSource>();   
-        aud.clip = Microphone.Start(null, true, 10, 44100);
+        aud.clip = Microphone.Start(null, true, 100, 44100);
         aud.Play();
+        // nextChange = Time.realtimeSinceStartup + timeout;
+        // state = "timeout";
+
     }
 
     void Update()
+    {
+        Analyze();
+        // if (nextChange < Time.realtimeSinceStartup ) {
+        //     if (state == "timeout") {
+        //         segmentsLeft = noOfSegments;
+        //         state = "registeringNote";
+        //         counter.enabled = false;
+        //         RegisterNote();
+        //         return;
+        //     }
+        //     if (state == "registeringNote") {
+        //         Analyze();
+        //         if (segmentsLeft > 0) {
+        //             RegisterNote();
+        //         }
+        //         else {
+        //             state = "timeout";
+        //             counter.enabled = true;
+        //             nextChange = Time.realtimeSinceStartup + timeout;
+        //             noteName.text = "";
+        //             progressBar.value = 0;
+        //         }
+        //     }
+        // }
+        // if (state == "registeringNote") {
+        //     progressBar.value = (Time.realtimeSinceStartup - nextChange + 1);
+        // }
+        // if (state == "timeout") {
+        //     counter.text = Mathf.CeilToInt(nextChange - Time.realtimeSinceStartup).ToString();
+        // }
+        
+    }
+
+    void RegisterNote() {
+        // AudioSource aud = GetComponent<AudioSource>();   
+        // aud.clip = Microphone.Start(null, true, 1, 44100);
+        // aud.Play();
+        // nextChange = Time.realtimeSinceStartup + 1;
+        // segmentsLeft--;
+    }
+
+    void Analyze()
     {
         float[] spectrum = new float[qSamples];
         AudioListener.GetSpectrumData(spectrum, 0, FFTWindow.BlackmanHarris);
@@ -40,7 +94,10 @@ public class MicInput : MonoBehaviour
             freqN += (float)0.5 * (dR * dR - dL * dL);
         }
         var pitchValue = freqN * (AudioSettings.outputSampleRate / 2) / qSamples; // convert index to frequency
-        noteNumber.text = GetNoteName(pitchValue);
+        var name = GetNoteName(pitchValue);
+        if (name != "none") {
+            noteName.text = GetNoteName(pitchValue);
+        }
     }
 
     public string GetNoteName(float freq)
