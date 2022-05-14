@@ -15,6 +15,7 @@ public class MicAnalyzer : MonoBehaviour
     public bool stopped  = true;
     public GameObject singleSegmentAnalyzerPrefab;
     GameObject singleSegmentAnalyzer;
+    public List<RecordedVoice> clips = new List<RecordedVoice>();
     void Start() {
     }
     public void Reset()
@@ -28,11 +29,12 @@ public class MicAnalyzer : MonoBehaviour
         singleSegmentAnalyzer.GetComponent<SingleSegmentAnalyzer>().recordingEnded = Stop;
     }
 
-    void Stop() {
+    void Stop(RecordedVoice recording) {
         progressBar.value = 1;
         DestroyImmediate(singleSegmentAnalyzer);
         singleSegmentAnalyzer = null;
         stopped = true;
+        clips.Add(recording);
         if (segmentEnded != null) {
             segmentEnded.Invoke();
         }

@@ -12,7 +12,7 @@ public class SingleSegmentAnalyzer:MonoBehaviour {
 
     public AudioMixer masterMixer;
     float startTime;
-    public delegate void Signal();
+    public delegate void Signal(RecordedVoice clip);
     public Signal recordingEnded; 
     void Start() {
         Application.RequestUserAuthorization(UserAuthorization.Microphone);
@@ -37,7 +37,7 @@ public class SingleSegmentAnalyzer:MonoBehaviour {
         if (startTime + registrationDuration < Time.realtimeSinceStartup) {
             Microphone.GetPosition(null);
             Microphone.End(null);
-            recordingEnded.Invoke();
+            recordingEnded.Invoke(new RecordedVoice(GetComponent<AudioSource>().clip, mostFrequentNoteName));
         }
     }
 
